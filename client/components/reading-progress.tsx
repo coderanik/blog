@@ -14,7 +14,8 @@ export function ReadingProgress() {
 
   useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      setIsVisible(latest > 0.05)
+      // Show when scrolling starts (after 5%) and hide when reading is complete (above 95%)
+      setIsVisible(latest > 0.05 && latest < 0.95)
     })
     return () => unsubscribe()
   }, [scrollYProgress])
@@ -22,7 +23,10 @@ export function ReadingProgress() {
   if (!isVisible) return null
 
   return (
-    <motion.div className="fixed top-16 left-0 right-0 h-1 bg-primary/20 origin-left z-50" style={{ scaleX }}>
+    <motion.div 
+      className="fixed bottom-0 left-0 right-0 h-1 bg-primary/20 origin-left z-50" 
+      style={{ scaleX }}
+    >
       <div className="h-full w-full bg-gradient-to-r from-primary to-secondary" />
     </motion.div>
   )
