@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 3003;
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      "https://blog-admin.anikdas.me",
-      "https://myblog.anikdas.me",
+      "https://blog-admin.anikdas.me/",
+      "https://myblog.anikdas.me/",
       "http://localhost:3000",
       "http://localhost:3002",
     ];
