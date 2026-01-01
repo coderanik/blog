@@ -12,14 +12,30 @@ const app = express();
 const PORT = process.env.PORT || 3003;
 
 // CORS configuration
-const corsOptions = {
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
-    process.env.ADMIN_URL || 'http://localhost:3002'
-  ],
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "https://blog-admin.anikdas.me",
+      "https://myblog.anikdas.me",
+      "http://localhost:3000",
+      "http://localhost:3002",
+    ];
+
+    // allow server-to-server / curl / health checks
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
+
 
 app.use(cors(corsOptions));
 app.use(express.json());
