@@ -27,7 +27,7 @@ async function createAdmin() {
     const admin = new User({
       username: username.toLowerCase(),
       password,
-      email: `admin@example.com`
+      email: `anikdas210605@gmail.com`
     });
 
     await admin.save();
