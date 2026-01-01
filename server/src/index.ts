@@ -15,8 +15,10 @@ const PORT = process.env.PORT || 3003;
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      "https://blog-admin.anikdas.me/",
-      "https://myblog.anikdas.me/",
+      "https://blog-admin.anikdas.me",
+      "https://myblog.anikdas.me",
+      "https://anikdas.me",
+      "https://www.anikdas.me",
       "http://localhost:3000",
       "http://localhost:3002",
     ];
@@ -24,9 +26,15 @@ const corsOptions: cors.CorsOptions = {
     // allow server-to-server / curl / health checks
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // Check if origin matches any allowed origin (with or without trailing slash)
+    const isAllowed = allowedOrigins.some(allowed => 
+      origin === allowed || origin === `${allowed}/` || origin.startsWith(`${allowed}/`)
+    );
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
