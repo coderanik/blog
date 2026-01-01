@@ -14,7 +14,7 @@ export function Footer() {
               <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">Social</h4>
               <div className="flex space-x-4">
                 <a
-                  href="https://twitter.com/anikdas"
+                  href="https://x.com/anikdas_dev"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-zinc-400 hover:text-white transition-colors"
@@ -23,7 +23,7 @@ export function Footer() {
                   <span className="sr-only">Twitter</span>
                 </a>
                 <a
-                  href="https://github.com/anikdas"
+                  href="https://github.com/coderanik"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-zinc-400 hover:text-white transition-colors"
@@ -32,7 +32,7 @@ export function Footer() {
                   <span className="sr-only">GitHub</span>
                 </a>
                 <a
-                  href="https://linkedin.com/in/anikdas"
+                  href="https://linkedin.com/in/anikdas21"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-zinc-400 hover:text-white transition-colors"
