@@ -8,9 +8,8 @@ import { getPostBySlug, trackClick } from "@/lib/blog-posts"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ReadingProgress } from "@/components/reading-progress"
-import { TableOfContents } from "@/components/table-of-contents"
 import { ShareButtons } from "@/components/share-buttons"
-import { PostEngagement } from "@/components/post-engagement"
+import { calculateReadingTime } from "@/lib/reading-time"
 import type { BlogPost } from "@/lib/blog-posts"
 
 export default function BlogPostPage() {
@@ -61,20 +60,25 @@ export default function BlogPostPage() {
 
   const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/blog/${slug}` : `https://yourblog.com/blog/${slug}`
 
+  // Calculate reading time from content if available (as fallback)
+  const displayReadTime = post.content 
+    ? calculateReadingTime(post.content) 
+    : post.readTime
+
   return (
     <>
       <ReadingProgress />
-      <div className="py-12 px-6">
+      <div className="py-12 px-4 pb-6 sm:px-6">
         <div className="container mx-auto max-w-7xl">
           <Link href="/">
             <Button variant="ghost" className="mb-8 gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              Back
             </Button>
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-12">
-            <article className="max-w-3xl">
+          <div>
+            <article className="max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-8 md:bg-black/20 md:backdrop-blur-3xl md:backdrop-saturate-150 md:rounded-3xl md:border md:border-white/10 md:shadow-lg md:shadow-black/20 md:px-10 md:py-10 lg:px-12 lg:py-12">
               <header className="mb-8">
                 <div className="flex flex-wrap gap-2 mb-4">
                   {post.tags.map((tag) => (
@@ -101,7 +105,7 @@ export default function BlogPostPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4" />
-                    <span>{post.readTime}</span>
+                    <span>{displayReadTime}</span>
                   </div>
                 </div>
               </header>
@@ -111,19 +115,13 @@ export default function BlogPostPage() {
                 dangerouslySetInnerHTML={{ __html: post.content || '' }}
               />
 
-              <footer className="mt-12 pt-8 border-t border-white/10">
-                <div className="flex items-center justify-between mb-12">
-                  <p className="text-sm text-muted-foreground">Share this article:</p>
+              <footer className="mt-6 pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground"></p>
                   <ShareButtons title={post.title} url={postUrl} />
                 </div>
-
-                <PostEngagement slug={slug} />
               </footer>
             </article>
-
-            <aside className="hidden lg:block">
-              <TableOfContents />
-            </aside>
           </div>
         </div>
       </div>

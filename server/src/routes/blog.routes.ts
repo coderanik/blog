@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import Blog from '../models/Blog.model';
+import { calculateReadingTime } from '../utils/reading-time';
 
 const router = express.Router();
 
@@ -65,13 +66,16 @@ router.post('/', async (req: Request, res: Response) => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    // Calculate reading time from content if not provided
+    const calculatedReadTime = readTime || calculateReadingTime(content);
+
     const blog = new Blog({
       title,
       slug,
       description,
       content,
       tags: tags || [],
-      readTime: readTime || '5 min read',
+      readTime: calculatedReadTime,
       status: status || 'draft'
     });
 
@@ -94,6 +98,16 @@ router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { title, description, content, tags, readTime, status } = req.body;
     
+    // If content is being updated, recalculate reading time unless explicitly provided
+    let finalReadTime = readTime;
+    if (content && !readTime) {
+      // Get current blog to check if content changed
+      const currentBlog = await Blog.findById(req.params.id);
+      if (currentBlog && currentBlog.content !== content) {
+        finalReadTime = calculateReadingTime(content);
+      }
+    }
+    
     const blog = await Blog.findByIdAndUpdate(
       req.params.id,
       {
@@ -101,7 +115,7 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(description && { description }),
         ...(content && { content }),
         ...(tags && { tags }),
-        ...(readTime && { readTime }),
+        ...(finalReadTime && { readTime: finalReadTime }),
         ...(status && { status })
       },
       { new: true, runValidators: true }

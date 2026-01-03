@@ -78,7 +78,7 @@ export function PostEngagement({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <div className="space-y-8">
+      {/* <div className="space-y-8">
         <h3 className="text-xl font-bold tracking-tight">Discussion</h3>
 
         <form onSubmit={handleComment} className="flex gap-4">
@@ -112,7 +112,7 @@ export function PostEngagement({ slug }: { slug: string }) {
             ))}
           </AnimatePresence>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

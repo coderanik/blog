@@ -2,7 +2,7 @@ import { Github, Twitter, Linkedin } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="mt-20 py-12">
+    <footer className="mt4 py-12">
       <div className="container mx-auto px-4">
         <div className="bg-black/20 backdrop-blur-xl backdrop-saturate-150 rounded-2xl border border-white/10 shadow-lg shadow-black/20 p-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -11,7 +11,7 @@ export function Footer() {
               <p className="text-sm text-zinc-400">Exploring the intersection of code, design, and innovation.</p>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">Social</h4>
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-300"></h4>
               <div className="flex space-x-4">
                 <a
                   href="https://x.com/anikdas_dev"
