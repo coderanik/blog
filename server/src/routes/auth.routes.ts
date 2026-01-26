@@ -13,8 +13,31 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
+    // Check if MongoDB is connected
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB not connected during login. ReadyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        error: 'Database connection unavailable',
+        message: 'The database is not connected. Please wait a moment and try again, or check your server logs.'
+      });
+    }
+
     // Find user
-    const user = await User.findOne({ username: username.toLowerCase() });
+    let user;
+    try {
+      user = await User.findOne({ username: username.toLowerCase() });
+    } catch (dbError: any) {
+      console.error('Database error during login:', dbError);
+      if (dbError.name === 'MongoServerError' || dbError.name === 'MongooseError' || dbError.message?.includes('connection')) {
+        return res.status(503).json({ 
+          error: 'Database connection error',
+          message: 'Unable to verify credentials. Please try again in a moment.'
+        });
+      }
+      throw dbError;
+    }
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
@@ -44,7 +67,7 @@ router.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    res.status(500).json({ error: 'Failed to login', message: 'An unexpected error occurred. Please try again.' });
   }
 });
 

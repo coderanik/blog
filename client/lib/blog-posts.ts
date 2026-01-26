@@ -9,7 +9,9 @@ export interface BlogPost {
   readTime: string
   tags: string[]
   content?: string
+  image?: string
   status?: 'published' | 'draft'
+  featuredPost?: boolean
 }
 
 let cachedPosts: BlogPost[] | null = null

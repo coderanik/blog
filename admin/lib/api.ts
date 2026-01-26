@@ -3,6 +3,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api';
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   return {
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+}
+
+function getAuthHeadersWithJson(): HeadersInit {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
@@ -14,10 +21,12 @@ export interface Blog {
   slug: string;
   description: string;
   content: string;
+  image?: string;
   tags: string[];
   date: string;
   readTime: string;
   status: 'published' | 'draft';
+  featuredPost?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,15 +46,22 @@ export interface AnalyticsSummary {
 // Blog APIs
 export async function getAllBlogs(): Promise<Blog[]> {
   const response = await fetch(`${API_URL}/blogs`, {
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       // Token expired or invalid
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to fetch blogs');
@@ -61,14 +77,21 @@ export async function getPublishedBlogs(): Promise<Blog[]> {
 
 export async function getDrafts(): Promise<Blog[]> {
   const response = await fetch(`${API_URL}/blogs/drafts/all`, {
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to fetch drafts');
@@ -91,15 +114,22 @@ export async function getBlogById(id: string): Promise<Blog> {
 export async function createBlog(blog: Partial<Blog>): Promise<Blog> {
   const response = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
     body: JSON.stringify(blog),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to create blog');
@@ -110,15 +140,22 @@ export async function createBlog(blog: Partial<Blog>): Promise<Blog> {
 export async function updateBlog(id: string, blog: Partial<Blog>): Promise<Blog> {
   const response = await fetch(`${API_URL}/blogs/${id}`, {
     method: 'PUT',
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
     body: JSON.stringify(blog),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to update blog');
@@ -129,14 +166,21 @@ export async function updateBlog(id: string, blog: Partial<Blog>): Promise<Blog>
 export async function deleteBlog(id: string): Promise<void> {
   const response = await fetch(`${API_URL}/blogs/${id}`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to delete blog');
@@ -146,14 +190,21 @@ export async function deleteBlog(id: string): Promise<void> {
 // Analytics APIs
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const response = await fetch(`${API_URL}/analytics/summary`, {
-    headers: getAuthHeaders(),
+    headers: getAuthHeadersWithJson(),
   });
   if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isAuthenticated');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     throw new Error('Failed to fetch analytics');
@@ -165,5 +216,88 @@ export async function getBlogAnalytics(slug: string) {
   const response = await fetch(`${API_URL}/analytics/blog/${slug}`);
   if (!response.ok) throw new Error('Failed to fetch blog analytics');
   return response.json();
+}
+
+// Set featured post
+export async function setFeaturedPost(id: string): Promise<Blog> {
+  const response = await fetch(`${API_URL}/blogs/featured/${id}`, {
+    method: 'POST',
+    headers: getAuthHeadersWithJson(),
+  });
+  if (!response.ok) {
+    // Don't redirect on database connection errors (503)
+    if (response.status === 503) {
+      throw new Error('Database connection unavailable. Please try again in a moment.');
+    }
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('isAuthenticated');
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+    }
+    throw new Error('Failed to set featured post');
+  }
+  return response.json();
+}
+
+// Upload image to Cloudinary
+export async function uploadImage(file: File): Promise<{ url: string; public_id: string }> {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const response = await fetch(`${API_URL}/upload/image`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      // Handle database connection errors (503) without redirecting
+      if (response.status === 503) {
+        let errorMessage = 'Database connection unavailable';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (e) {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage + '. Please wait a moment and try again.');
+      }
+      
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('isAuthenticated');
+          // Only redirect if not already on login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+        throw new Error('Authentication failed. Please login again.');
+      }
+      
+      let errorMessage = 'Failed to upload image';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || error.error || errorMessage;
+      } catch (e) {
+        // If response is not JSON, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to upload image. Please try again.');
+  }
 }
 

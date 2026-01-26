@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Blog from '../models/Blog.model';
 import { calculateReadingTime } from '../utils/reading-time';
 
@@ -7,12 +8,26 @@ const router = express.Router();
 // Get all published blogs
 router.get('/published', async (req: Request, res: Response) => {
   try {
+    // Check if mongoose is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB not connected. ReadyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        error: 'Database not available',
+        message: 'MongoDB connection is not established'
+      });
+    }
+
     const blogs = await Blog.find({ status: 'published' })
-      .sort({ date: -1 })
+      .sort({ featuredPost: -1, date: -1 }) // Featured posts first, then by date
       .select('-content'); // Exclude content for list view
     res.json(blogs);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch blogs' });
+  } catch (error: any) {
+    console.error('Error fetching published blogs:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch blogs',
+      message: error.message || 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -54,7 +69,7 @@ router.get('/drafts/all', async (req: Request, res: Response) => {
 // Create new blog (must be before /:slug route)
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { title, description, content, tags, readTime, status } = req.body;
+    const { title, description, content, image, tags, readTime, status } = req.body;
     
     if (!title || !description || !content) {
       return res.status(400).json({ error: 'Title, description, and content are required' });
@@ -74,6 +89,7 @@ router.post('/', async (req: Request, res: Response) => {
       slug,
       description,
       content,
+      image: image || '',
       tags: tags || [],
       readTime: calculatedReadTime,
       status: status || 'draft'
@@ -96,7 +112,7 @@ router.post('/', async (req: Request, res: Response) => {
 // Update blog
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { title, description, content, tags, readTime, status } = req.body;
+    const { title, description, content, image, tags, readTime, status, featuredPost } = req.body;
     
     // If content is being updated, recalculate reading time unless explicitly provided
     let finalReadTime = readTime;
@@ -108,15 +124,25 @@ router.put('/:id', async (req: Request, res: Response) => {
       }
     }
     
+    // If setting as featured post, unset all other featured posts
+    if (featuredPost === true) {
+      await Blog.updateMany(
+        { _id: { $ne: req.params.id } },
+        { $set: { featuredPost: false } }
+      );
+    }
+    
     const blog = await Blog.findByIdAndUpdate(
       req.params.id,
       {
         ...(title && { title }),
         ...(description && { description }),
         ...(content && { content }),
+        ...(image !== undefined && { image }),
         ...(tags && { tags }),
         ...(finalReadTime && { readTime: finalReadTime }),
-        ...(status && { status })
+        ...(status && { status }),
+        ...(featuredPost !== undefined && { featuredPost })
       },
       { new: true, runValidators: true }
     );
@@ -141,6 +167,32 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.json({ message: 'Blog deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete blog' });
+  }
+});
+
+// Set featured post
+router.post('/featured/:id', async (req: Request, res: Response) => {
+  try {
+    // Unset all other featured posts
+    await Blog.updateMany(
+      { _id: { $ne: req.params.id } },
+      { $set: { featuredPost: false } }
+    );
+    
+    // Set this post as featured
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $set: { featuredPost: true } },
+      { new: true }
+    );
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    res.json(blog);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to set featured post' });
   }
 });
 

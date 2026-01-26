@@ -6,10 +6,12 @@ export interface BlogPost {
   title: string;
   description: string;
   content?: string;
+  image?: string;
   date: string;
   readTime: string;
   tags: string[];
   status: 'published' | 'draft';
+  featuredPost?: boolean;
 }
 
 export async function getAllPosts(): Promise<BlogPost[]> {

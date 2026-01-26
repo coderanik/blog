@@ -5,10 +5,12 @@ export interface IBlog extends Document {
   slug: string;
   description: string;
   content: string;
+  image?: string;
   tags: string[];
   date: Date;
   readTime: string;
   status: 'published' | 'draft';
+  featuredPost?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +38,10 @@ const BlogSchema = new Schema<IBlog>(
       type: String,
       required: true
     },
+    image: {
+      type: String,
+      default: ''
+    },
     tags: {
       type: [String],
       default: []
@@ -52,6 +58,10 @@ const BlogSchema = new Schema<IBlog>(
       type: String,
       enum: ['published', 'draft'],
       default: 'draft'
+    },
+    featuredPost: {
+      type: Boolean,
+      default: false
     }
   },
   {

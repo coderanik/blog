@@ -25,8 +25,21 @@ export async function login(username: string, password: string): Promise<LoginRe
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to login');
+    let errorMessage = 'Failed to login';
+    try {
+      const error = await response.json();
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      // If response is not JSON, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    
+    // For database connection errors (503), provide a helpful message
+    if (response.status === 503) {
+      throw new Error(errorMessage + ' The server may still be connecting to the database. Please wait a moment and try again.');
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();

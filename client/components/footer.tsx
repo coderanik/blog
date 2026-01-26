@@ -1,51 +1,9 @@
-import { Github, Twitter, Linkedin } from "lucide-react"
-
 export function Footer() {
   return (
-    <footer className="mt4 py-12">
-      <div className="container mx-auto px-4">
-        <div className="bg-black/20 backdrop-blur-xl backdrop-saturate-150 rounded-2xl border border-white/10 shadow-lg shadow-black/20 p-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">anikdas</h3>
-              <p className="text-sm text-zinc-400">Exploring the intersection of code, design, and innovation.</p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-300"></h4>
-              <div className="flex space-x-4">
-                <a
-                  href="https://x.com/anikdas_dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Twitter className="size-5" />
-                  <span className="sr-only">Twitter</span>
-                </a>
-                <a
-                  href="https://github.com/coderanik"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Github className="size-5" />
-                  <span className="sr-only">GitHub</span>
-                </a>
-                <a
-                  href="https://linkedin.com/in/anikdas21"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Linkedin className="size-5" />
-                  <span className="sr-only">LinkedIn</span>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 border-t border-white/10 pt-8 text-center text-xs text-zinc-500">
-            © {new Date().getFullYear()} anikdas. All rights reserved.
-          </div>
+    <footer className="mt-16 py-8 border-t border-black bg-gray-50">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center text-sm text-gray-500 font-sans">
+          © {new Date().getFullYear()} Engineering Insights. All rights reserved.
         </div>
       </div>
     </footer>

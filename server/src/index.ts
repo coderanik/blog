@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 import blogRoutes from './routes/blog.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import authRoutes from './routes/auth.routes';
+import uploadRoutes from './routes/upload.routes';
+import contactRoutes from './routes/contact.routes';
 
 dotenv.config();
 
@@ -56,7 +58,8 @@ const connectionString = MONGODB_URI;
 
 // MongoDB connection options
 const mongooseOptions = {
-  // Remove deprecated options and use modern connection
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 10s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
 };
 
 mongoose
@@ -69,13 +72,19 @@ mongoose
     console.error('❌ MongoDB connection error:', error.message);
     console.error('💡 Tip: If using local MongoDB without auth, remove MONGODB_USERNAME and MONGODB_PASSWORD from .env');
     console.error('💡 Tip: If using MongoDB with auth, ensure credentials are correct');
-    process.exit(1);
+    console.error('💡 Tip: Check if MongoDB is running and the connection string is correct');
+    // Don't exit in production - let the server start and handle errors gracefully
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️  Server will continue but database operations will fail');
+    }
   });
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
