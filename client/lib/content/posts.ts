@@ -217,8 +217,10 @@ export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
     metas.push(buildMeta(fileSlug, urlSlug, fm, parsed.content || ""))
   }
 
-  metas.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  return metas
+  // Exclude non-canonical slug "faster" so the post only appears at /blog/which-is-faster-include-vs-import
+  const filtered = metas.filter((m) => m.slug !== "faster")
+  filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return filtered
 })
 
 export const getFeaturedPostsMeta = cache(async (limit = 1): Promise<PostMeta[]> => {
@@ -229,15 +231,12 @@ export const getFeaturedPostsMeta = cache(async (limit = 1): Promise<PostMeta[]>
 })
 
 async function resolvePostByUrlSlug(urlSlug: string): Promise<string | null> {
-  // First try file-based resolution (for backward compatibility: /blog/faster)
-  const byFile = await resolvePostFilePath(urlSlug)
-  if (byFile) return byFile
-
-  // Then try to find by computing URL slug from each file's frontmatter
+  const normalizedUrlSlug = slugifyTitle(urlSlug)
   const postsDir = await getPostsDir()
   const entries = await fs.readdir(postsDir, { withFileTypes: true }).catch(() => [])
-  const normalizedUrlSlug = slugifyTitle(urlSlug)
 
+  // Resolve only by canonical slug (frontmatter slug or slugify(title)) so we don't
+  // serve the same post at multiple URLs (e.g. /blog/faster and /blog/which-is-faster-include-vs-import)
   for (const entry of entries) {
     if (!entry.isFile() || !POST_EXTENSIONS.some((ext) => entry.name.endsWith(ext)) || entry.name.startsWith("_")) continue
     const filePath = path.join(postsDir, entry.name)
@@ -245,12 +244,12 @@ async function resolvePostByUrlSlug(urlSlug: string): Promise<string | null> {
     const parsed = matter(raw)
     const fm = (parsed.data || {}) as Partial<PostFrontmatter>
     const fileSlug = normalizeSlug(entry.name)
-    const computedSlug = fm.slug
+    const canonicalSlug = fm.slug
       ? slugifyTitle(fm.slug)
       : fm.title
         ? slugifyTitle(fm.title)
         : fileSlug
-    if (computedSlug === normalizedUrlSlug) return filePath
+    if (canonicalSlug === normalizedUrlSlug) return filePath
   }
   return null
 }
