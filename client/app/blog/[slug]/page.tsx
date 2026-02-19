@@ -1,11 +1,11 @@
-import { MoreVertical } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AnimatedNavbar } from "@/components/animated-navbar"
 import { PostEngagement } from "@/components/post-engagement"
+import { CopyLinkButton } from "@/components/copy-link-button"
 import { getAllPostSlugs, getPostBySlug } from "@/lib/content/posts"
 
-export const dynamicParams = false
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   const slugs = await getAllPostSlugs()
@@ -61,10 +61,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <span>{post.readTime}</span>
                 </div>
 
-                {/* Options Icon - Top Right */}
-                <button className="absolute top-8 right-8 text-gray-500 hover:text-gray-700 transition-colors">
-                  <MoreVertical className="h-5 w-5" />
-                </button>
+                {/* Copy Link Button - Top Right */}
+                <div className="absolute top-8 right-8">
+                  <CopyLinkButton slug={slug} />
+                </div>
 
                 {/* Post Title */}
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-black mb-4 mt-12 leading-tight">

@@ -8,6 +8,7 @@ import { compileMDX } from "next-mdx-remote/rsc"
 import remarkGfm from "remark-gfm"
 import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings from "rehype-autolink-headings"
+import rehypeWrap from "rehype-wrap"
 
 import { calculateReadingTime } from "@/lib/reading-time"
 import Callout from "@/components/Callout"
@@ -23,6 +24,8 @@ export type PostFrontmatter = {
   featuredPost?: boolean
   featuredOrder?: number
   draft?: boolean
+  /** Custom slug for URL (e.g. "which-is-faster-include-vs-import"). If omitted, derived from title. */
+  slug?: string
 }
 
 export interface PostMeta {
@@ -52,12 +55,14 @@ async function getPostsDir(): Promise<string> {
   const candidates = [
     path.join(cwd, "content", "posts"),
     path.join(cwd, "client", "content", "posts"),
+    path.join(cwd, "..", "client", "content", "posts"),
   ]
   for (const dir of candidates) {
     try {
-      await fs.access(dir)
-      cachedPostsDir = dir
-      return dir
+      const resolved = path.resolve(dir)
+      await fs.access(resolved)
+      cachedPostsDir = resolved
+      return resolved
     } catch {
       continue
     }
@@ -83,6 +88,16 @@ function normalizeSlug(filename: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "")
     .replace(/^-+|-+$/g, "")
+}
+
+/** Convert title (or any text) to a URL-safe slug with hyphens */
+function slugifyTitle(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special chars except spaces and hyphens
+    .replace(/\s+/g, "-") // Spaces to hyphens
+    .replace(/-+/g, "-") // Collapse multiple hyphens
+    .replace(/^-|-$/g, "") // Trim hyphens
 }
 
 async function resolvePostFilePath(slug: string): Promise<string | null> {
@@ -133,8 +148,13 @@ function toIsoDate(input: unknown): string {
   return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString()
 }
 
-function buildMeta(slug: string, fm: Partial<PostFrontmatter>, body: string): PostMeta {
-  const title = String(fm.title || slug)
+function buildMeta(
+  fileSlug: string,
+  urlSlug: string,
+  fm: Partial<PostFrontmatter>,
+  body: string
+): PostMeta {
+  const title = String(fm.title || fileSlug)
   const description = String(fm.description || "")
   const date = toIsoDate(fm.date)
   const tags = normalizeTags(fm.tags)
@@ -144,8 +164,8 @@ function buildMeta(slug: string, fm: Partial<PostFrontmatter>, body: string): Po
     typeof fm.featuredOrder === "number" ? fm.featuredOrder : fm.featuredOrder ? Number(fm.featuredOrder) : undefined
 
   return {
-    _id: slug,
-    slug,
+    _id: urlSlug,
+    slug: urlSlug,
     title,
     description,
     date,
@@ -158,31 +178,24 @@ function buildMeta(slug: string, fm: Partial<PostFrontmatter>, body: string): Po
 }
 
 export const getAllPostSlugs = cache(async (): Promise<string[]> => {
-  const postsDir = await getPostsDir()
-  const entries = await fs.readdir(postsDir, { withFileTypes: true }).catch(() => [])
-  const slugs = entries
-    .filter((e) => e.isFile())
-    .map((e) => e.name)
-    .filter((name) => POST_EXTENSIONS.some((ext) => name.endsWith(ext)))
-    .map((name) => normalizeSlug(name))
-  
-  // Remove duplicate slugs (in case multiple files normalize to the same slug)
-  return [...new Set(slugs)]
+  const metas = await getAllPostsMeta()
+  return metas.map((m) => m.slug)
 })
 
 export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
-  const slugs = await getAllPostSlugs()
+  const postsDir = await getPostsDir()
+  const entries = await fs.readdir(postsDir, { withFileTypes: true }).catch(() => [])
+  const files = entries
+    .filter((e) => e.isFile())
+    .filter((e) => POST_EXTENSIONS.some((ext) => e.name.endsWith(ext)))
+    .filter((e) => !e.name.startsWith("_")) // Skip templates (e.g. _template.mdx)
+  
   const metas: PostMeta[] = []
-  const seenSlugs = new Set<string>()
+  const seenUrlSlugs = new Set<string>()
 
-  for (const slug of slugs) {
-    // Skip if we've already processed this slug
-    if (seenSlugs.has(slug)) continue
-    seenSlugs.add(slug)
-
-    // eslint-disable-next-line no-await-in-loop
-    const filePath = await resolvePostFilePath(slug)
-    if (!filePath) continue
+  for (const entry of files) {
+    const fileSlug = normalizeSlug(entry.name)
+    const filePath = path.join(postsDir, entry.name)
 
     // eslint-disable-next-line no-await-in-loop
     const raw = await fs.readFile(filePath, "utf8")
@@ -190,16 +203,22 @@ export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
     const fm = (parsed.data || {}) as Partial<PostFrontmatter>
 
     if (fm.draft) continue
-    metas.push(buildMeta(slug, fm, parsed.content || ""))
+
+    // URL slug: frontmatter slug > slugify(title) > file slug
+    const urlSlug = fm.slug
+      ? slugifyTitle(fm.slug)
+      : fm.title
+        ? slugifyTitle(fm.title)
+        : fileSlug
+
+    if (seenUrlSlugs.has(urlSlug)) continue
+    seenUrlSlugs.add(urlSlug)
+
+    metas.push(buildMeta(fileSlug, urlSlug, fm, parsed.content || ""))
   }
 
-  // Final deduplication by slug (safety measure)
-  const uniqueMetas = metas.filter((meta, index, self) => 
-    index === self.findIndex((m) => m.slug === meta.slug)
-  )
-
-  uniqueMetas.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  return uniqueMetas
+  metas.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return metas
 })
 
 export const getFeaturedPostsMeta = cache(async (limit = 1): Promise<PostMeta[]> => {
@@ -209,13 +228,42 @@ export const getFeaturedPostsMeta = cache(async (limit = 1): Promise<PostMeta[]>
   return featured.slice(0, limit)
 })
 
+async function resolvePostByUrlSlug(urlSlug: string): Promise<string | null> {
+  // First try file-based resolution (for backward compatibility: /blog/faster)
+  const byFile = await resolvePostFilePath(urlSlug)
+  if (byFile) return byFile
+
+  // Then try to find by computing URL slug from each file's frontmatter
+  const postsDir = await getPostsDir()
+  const entries = await fs.readdir(postsDir, { withFileTypes: true }).catch(() => [])
+  const normalizedUrlSlug = slugifyTitle(urlSlug)
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !POST_EXTENSIONS.some((ext) => entry.name.endsWith(ext)) || entry.name.startsWith("_")) continue
+    const filePath = path.join(postsDir, entry.name)
+    const raw = await fs.readFile(filePath, "utf8")
+    const parsed = matter(raw)
+    const fm = (parsed.data || {}) as Partial<PostFrontmatter>
+    const fileSlug = normalizeSlug(entry.name)
+    const computedSlug = fm.slug
+      ? slugifyTitle(fm.slug)
+      : fm.title
+        ? slugifyTitle(fm.title)
+        : fileSlug
+    if (computedSlug === normalizedUrlSlug) return filePath
+  }
+  return null
+}
+
 export const getPostBySlug = cache(async (slug: string): Promise<Post | null> => {
-  const filePath = await resolvePostFilePath(slug)
+  const filePath = await resolvePostByUrlSlug(slug)
   if (!filePath) return null
 
   const source = await fs.readFile(filePath, "utf8")
   const parsed = matter(source)
-  
+  const fm = (parsed.data || {}) as Partial<PostFrontmatter>
+  const fileSlug = normalizeSlug(path.basename(filePath, path.extname(filePath)))
+
   // Remove import statements from MDX source (next-mdx-remote doesn't support them)
   const cleanedSource = source.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
   
@@ -228,9 +276,15 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
         rehypePlugins: [
           rehypeSlug,
           [
-            // Wrap headings in anchor links; useful for TOC / sharing.
             rehypeAutolinkHeadings,
             { behavior: "wrap" },
+          ],
+          [
+            rehypeWrap,
+            {
+              selector: "table",
+              wrapper: "div.table-scroll-wrapper",
+            },
           ],
         ],
       },
@@ -241,9 +295,15 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
     },
   })
 
-  const fm = compiled.frontmatter || ({} as PostFrontmatter)
-  const meta = buildMeta(slug, fm, parsed.content || "")
-  if (fm.draft) return null
+  const compiledFm = compiled.frontmatter || ({} as PostFrontmatter)
+  if (compiledFm.draft) return null
+
+  const urlSlug = compiledFm.slug
+    ? slugifyTitle(compiledFm.slug)
+    : compiledFm.title
+      ? slugifyTitle(compiledFm.title)
+      : fileSlug
+  const meta = buildMeta(fileSlug, urlSlug, compiledFm, parsed.content || "")
 
   return {
     ...meta,

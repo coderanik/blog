@@ -227,11 +227,20 @@
     border-radius: 0.5rem;
   }
 
+  /* Table wrapper - enables horizontal scroll on mobile */
+  .blog-post-content .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1.5rem 0;
+    max-width: 100%;
+  }
+
   /* Table styling with visible borders */
   .blog-post-content table {
     width: 100% !important;
+    min-width: 320px !important;
     border-collapse: collapse !important;
-    margin: 1.5rem 0 !important;
+    margin: 0 !important;
     border: 1px solid rgb(0, 0, 0) !important;
   }
 
@@ -241,6 +250,18 @@
     border-width: 1px !important;
     padding: 0.75rem 1rem !important;
     text-align: left !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    min-width: 0 !important;
+  }
+
+  /* Allow text to wrap in table cells on mobile - prevents truncation */
+  @media (max-width: 768px) {
+    .blog-post-content table th,
+    .blog-post-content table td {
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.875rem;
+    }
   }
 
   .blog-post-content table th {
