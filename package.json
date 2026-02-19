@@ -2,5 +2,8 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "tailwindcss": "^4.1.18"
+  },
+  "dependencies": {
+    "next-mdx-remote": "^6.0.0"
   }
 }
