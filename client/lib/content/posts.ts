@@ -10,6 +10,8 @@ import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings from "rehype-autolink-headings"
 
 import { calculateReadingTime } from "@/lib/reading-time"
+import Callout from "@/components/Callout"
+import CodeBlock from "@/components/CodeBlock"
 
 export type PostFrontmatter = {
   title: string
@@ -73,13 +75,45 @@ async function fileExists(filePath: string) {
   }
 }
 
+function normalizeSlug(filename: string): string {
+  // Remove extension first
+  const withoutExt = filename.replace(/\.(md|mdx)$/i, "")
+  // Normalize to URL-safe slug: lowercase, replace special chars with nothing, trim
+  return withoutExt
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .replace(/^-+|-+$/g, "")
+}
+
 async function resolvePostFilePath(slug: string): Promise<string | null> {
   const postsDir = await getPostsDir()
+  
+  // First try exact match
   for (const ext of POST_EXTENSIONS) {
     const p = path.join(postsDir, `${slug}${ext}`)
     // eslint-disable-next-line no-await-in-loop
     if (await fileExists(p)) return p
   }
+  
+  // If exact match fails, try to find file by normalized slug match
+  // This handles cases where filename has special chars but URL slug is normalized
+  try {
+    const entries = await fs.readdir(postsDir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isFile()) continue
+      if (!POST_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue
+      
+      const normalizedFilename = normalizeSlug(entry.name)
+      const normalizedSlug = normalizeSlug(slug)
+      
+      if (normalizedFilename === normalizedSlug) {
+        return path.join(postsDir, entry.name)
+      }
+    }
+  } catch {
+    // If readdir fails, just return null
+  }
+  
   return null
 }
 
@@ -130,7 +164,7 @@ export const getAllPostSlugs = cache(async (): Promise<string[]> => {
     .filter((e) => e.isFile())
     .map((e) => e.name)
     .filter((name) => POST_EXTENSIONS.some((ext) => name.endsWith(ext)))
-    .map((name) => name.replace(/\.(md|mdx)$/i, ""))
+    .map((name) => normalizeSlug(name))
 })
 
 export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
@@ -168,8 +202,12 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
 
   const source = await fs.readFile(filePath, "utf8")
   const parsed = matter(source)
+  
+  // Remove import statements from MDX source (next-mdx-remote doesn't support them)
+  const cleanedSource = source.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
+  
   const compiled = await compileMDX<PostFrontmatter>({
-    source,
+    source: cleanedSource,
     options: {
       parseFrontmatter: true,
       mdxOptions: {
@@ -183,6 +221,10 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
           ],
         ],
       },
+    },
+    components: {
+      Callout,
+      CodeBlock,
     },
   })
 

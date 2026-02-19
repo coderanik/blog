@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import analyticsRoutes from './routes/analytics.routes';
 import authRoutes from './routes/auth.routes';
 import contactRoutes from './routes/contact.routes';
 import engagementRoutes from './routes/engagement.routes';
@@ -80,7 +79,6 @@ mongoose
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/analytics', analyticsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/engagement', engagementRoutes);
 

@@ -3,7 +3,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AnimatedNavbar } from "@/components/animated-navbar"
 import { PostEngagement } from "@/components/post-engagement"
-import { ViewTracker } from "@/components/view-tracker"
 import { getAllPostSlugs, getPostBySlug } from "@/lib/content/posts"
 
 export const dynamicParams = false
@@ -20,7 +19,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ViewTracker slug={slug} />
       <div className="max-w-6xl mx-auto px-6">
         {/* Tagline */}
         <div className="text-center pt-12 pb-6">
@@ -69,7 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </button>
 
                 {/* Post Title */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-black mb-4 mt-12 leading-tight">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-black mb-4 mt-12 leading-tight">
                   {post.title}
                 </h1>
 
@@ -81,8 +79,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
               {/* Featured Image */}
               {post.image ? (
-                <div className="w-full h-96 relative overflow-hidden bg-gray-200">
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                <div className="w-full relative bg-gray-200 flex items-center justify-center">
+                  <img 
+                    src={post.image} 
+                    alt={post.title} 
+                    className="w-full h-auto max-h-[600px] object-contain" 
+                  />
                 </div>
               ) : (
                 <div className="w-full h-96 bg-gray-200 relative overflow-hidden">

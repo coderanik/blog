@@ -28,7 +28,3 @@ export async function getFeaturedPosts(limit = 1): Promise<BlogPost[]> {
     )
   return featured.slice(0, limit)
 }
-
-export async function trackClick(_slug: string): Promise<void> {
-  // No-op (no backend analytics).
-}
