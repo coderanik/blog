@@ -160,18 +160,26 @@ function buildMeta(slug: string, fm: Partial<PostFrontmatter>, body: string): Po
 export const getAllPostSlugs = cache(async (): Promise<string[]> => {
   const postsDir = await getPostsDir()
   const entries = await fs.readdir(postsDir, { withFileTypes: true }).catch(() => [])
-  return entries
+  const slugs = entries
     .filter((e) => e.isFile())
     .map((e) => e.name)
     .filter((name) => POST_EXTENSIONS.some((ext) => name.endsWith(ext)))
     .map((name) => normalizeSlug(name))
+  
+  // Remove duplicate slugs (in case multiple files normalize to the same slug)
+  return [...new Set(slugs)]
 })
 
 export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
   const slugs = await getAllPostSlugs()
   const metas: PostMeta[] = []
+  const seenSlugs = new Set<string>()
 
   for (const slug of slugs) {
+    // Skip if we've already processed this slug
+    if (seenSlugs.has(slug)) continue
+    seenSlugs.add(slug)
+
     // eslint-disable-next-line no-await-in-loop
     const filePath = await resolvePostFilePath(slug)
     if (!filePath) continue
@@ -185,8 +193,13 @@ export const getAllPostsMeta = cache(async (): Promise<PostMeta[]> => {
     metas.push(buildMeta(slug, fm, parsed.content || ""))
   }
 
-  metas.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  return metas
+  // Final deduplication by slug (safety measure)
+  const uniqueMetas = metas.filter((meta, index, self) => 
+    index === self.findIndex((m) => m.slug === meta.slug)
+  )
+
+  uniqueMetas.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return uniqueMetas
 })
 
 export const getFeaturedPostsMeta = cache(async (limit = 1): Promise<PostMeta[]> => {
