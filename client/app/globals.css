@@ -154,8 +154,9 @@
   }
 
   /* Force text color on all elements within blog post content, overriding inline styles */
+  /* Exclude code-block-wrapper descendants so their light text colors are preserved */
   .blog-post-content,
-  .blog-post-content * {
+  .blog-post-content *:not(.code-block-wrapper):not(.code-block-wrapper *) {
     color: rgb(17, 24, 39) !important;
   }
 
@@ -216,6 +217,73 @@
   .blog-post-content h5,
   .blog-post-content h6 {
     color: rgb(0, 0, 0) !important;
+  }
+
+  .blog-post-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 1.5rem auto !important;
+    border-radius: 0.5rem;
+  }
+
+  /* Table styling with visible borders */
+  .blog-post-content table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1.5rem 0 !important;
+    border: 1px solid rgb(0, 0, 0) !important;
+  }
+
+  .blog-post-content table th,
+  .blog-post-content table td {
+    border: 1px solid rgb(0, 0, 0) !important;
+    border-width: 1px !important;
+    padding: 0.75rem 1rem !important;
+    text-align: left !important;
+  }
+
+  .blog-post-content table th {
+    background-color: rgb(249, 250, 251) !important;
+    font-weight: 600 !important;
+    color: rgb(0, 0, 0) !important;
+  }
+
+  .blog-post-content table td {
+    color: rgb(17, 24, 39) !important;
+  }
+
+  .blog-post-content table tr:nth-child(even) td {
+    background-color: rgb(249, 250, 251) !important;
+  }
+
+  /* Code block styling - light text on dark background */
+  .blog-post-content .code-block-wrapper {
+    color: #e2e8f0 !important;
+    background-color: #1e293b !important;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .blog-post-content .code-block-wrapper div {
+    color: #e2e8f0 !important;
+    background-color: #0f172a !important;
+    border-bottom: 1px solid #334155 !important;
+  }
+
+  .blog-post-content .code-block-wrapper pre {
+    color: #e2e8f0 !important;
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+
+  .blog-post-content .code-block-wrapper code {
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
+  }
+
+  .blog-post-content .code-block-wrapper * {
+    color: #e2e8f0 !important;
   }
 
   .blog-post-content a {

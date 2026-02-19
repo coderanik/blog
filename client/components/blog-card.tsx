@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Calendar, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { trackClick } from "@/lib/blog-posts"
 import type { BlogPost } from "@/lib/blog-posts"
 
 interface BlogCardProps {
@@ -14,10 +13,6 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post, index = 0 }: BlogCardProps) {
-  const handleClick = () => {
-    trackClick(post.slug)
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -26,7 +21,7 @@ export function BlogCard({ post, index = 0 }: BlogCardProps) {
       whileHover={{ y: -4 }}
       className="h-full"
     >
-      <Link href={`/blog/${post.slug}`} onClick={handleClick}>
+      <Link href={`/blog/${post.slug}`}>
         <Card className="glass border-white/10 hover:border-primary/50 transition-all duration-300 h-full group">
           <CardHeader>
             <div className="flex flex-wrap gap-2 mb-3">

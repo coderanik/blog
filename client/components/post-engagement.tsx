@@ -26,12 +26,26 @@ export function PostEngagement({ slug }: { slug: string }) {
   useEffect(() => {
     async function fetchEngagement() {
       try {
-        const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}`)
+        const encodedSlug = encodeURIComponent(slug)
+        const res = await fetch(`${BACKEND_API_URL}/engagement/${encodedSlug}`)
+        
+        if (!res.ok) {
+          // Silently fail - engagement is non-critical
+          setLikes(0)
+          setComments([])
+          setLoading(false)
+          return
+        }
+        
         const data = await res.json()
         setLikes(data.likes ?? 0)
         setComments(Array.isArray(data.comments) ? data.comments : [])
       } catch (error) {
-        console.error("Failed to fetch engagement:", error)
+        // Silently fail - engagement is non-critical
+        // Only log in development
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Failed to fetch engagement:", error)
+        }
         setLikes(0)
         setComments([])
       } finally {
@@ -46,17 +60,29 @@ export function PostEngagement({ slug }: { slug: string }) {
     setIsLiked(true)
     setLikes((prev) => prev + 1)
     try {
-      const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}/like`, {
+      const encodedSlug = encodeURIComponent(slug)
+      const res = await fetch(`${BACKEND_API_URL}/engagement/${encodedSlug}/like`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       })
+      
+      if (!res.ok) {
+        // Revert optimistic update if request failed
+        setLikes((prev) => prev - 1)
+        setIsLiked(false)
+        return
+      }
+      
       const data = await res.json()
       if (typeof data.likes === "number") setLikes(data.likes)
     } catch (error) {
-      console.error("Failed to like:", error)
+      // Revert optimistic update on error
       setLikes((prev) => prev - 1)
       setIsLiked(false)
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Failed to like:", error)
+      }
     }
   }
 
@@ -65,19 +91,44 @@ export function PostEngagement({ slug }: { slug: string }) {
     if (!newComment.trim() || isSubmitting) return
 
     setIsSubmitting(true)
+    const commentToAdd = newComment.trim()
+    
+    // Optimistically add comment
+    const optimisticComment: Comment = {
+      id: `temp-${Date.now()}`,
+      content: commentToAdd,
+      author: "Anonymous",
+      date: new Date().toISOString(),
+    }
+    setComments((prev) => [...prev, optimisticComment])
+    setNewComment("")
+
     try {
-      const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}/comment`, {
+      const encodedSlug = encodeURIComponent(slug)
+      const res = await fetch(`${BACKEND_API_URL}/engagement/${encodedSlug}/comment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newComment }),
+        body: JSON.stringify({ content: commentToAdd }),
       })
+      
+      if (!res.ok) {
+        // Remove optimistic comment if request failed
+        setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id))
+        setNewComment(commentToAdd) // Restore comment text
+        return
+      }
+      
       const data = await res.json()
       if (Array.isArray(data.comments)) {
         setComments(data.comments)
-        setNewComment("")
       }
     } catch (error) {
-      console.error("Failed to post comment:", error)
+      // Remove optimistic comment on error
+      setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id))
+      setNewComment(commentToAdd) // Restore comment text
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Failed to post comment:", error)
+      }
     } finally {
       setIsSubmitting(false)
     }

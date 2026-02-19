@@ -6,7 +6,6 @@ import Image from "next/image"
 import { Heart, Twitter, Linkedin, Github, Instagram } from "lucide-react"
 
 import { AnimatedNavbar } from "@/components/animated-navbar"
-import { trackClick } from "@/lib/backend-api"
 import type { BlogPost } from "@/lib/blog-posts"
 
 interface EngagementStats {
@@ -124,7 +123,7 @@ export function HomeClient({ initialPosts }: { initialPosts: BlogPost[] }) {
               )}
 
               {/* Post Details */}
-              <div className="p-4 md:p-6">
+              <div className="px-4 py-4 md:px-6 md:py-6">
                 <div className="mb-3 md:mb-4 text-xs md:text-sm text-gray-600 font-sans">
                   <span className="font-medium">Anik Das</span>
                   <span className="mx-2">•</span>
@@ -139,7 +138,7 @@ export function HomeClient({ initialPosts }: { initialPosts: BlogPost[] }) {
                   <span>{featuredPost.readTime}</span>
                 </div>
 
-                <Link href={`/blog/${featuredPost.slug}`} onClick={() => trackClick(featuredPost.slug)}>
+                <Link href={`/blog/${featuredPost.slug}`} className="block">
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-black mb-3 md:mb-4 hover:text-purple-600 transition-colors leading-tight">
                     {featuredPost.title}
                   </h2>
@@ -169,7 +168,6 @@ export function HomeClient({ initialPosts }: { initialPosts: BlogPost[] }) {
                     key={post.slug}
                     href={`/blog/${post.slug}`}
                     className="block group"
-                    onClick={() => trackClick(post.slug)}
                   >
                     <div className="flex gap-4 md:gap-6 border border-black p-5 md:p-0 transition-colors sm:w-165 sm:h-100">
                       {/* Post Image */}

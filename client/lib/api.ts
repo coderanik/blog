@@ -26,23 +26,4 @@ export async function getPostBySlug(slug: string): Promise<BlogPost> {
   return response.json();
 }
 
-export async function trackView(slug: string): Promise<void> {
-  try {
-    await fetch(`${API_URL}/analytics/view/${slug}`, {
-      method: 'POST',
-    });
-  } catch (error) {
-    console.error('Failed to track view:', error);
-  }
-}
-
-export async function trackClick(slug: string): Promise<void> {
-  try {
-    await fetch(`${API_URL}/analytics/click/${slug}`, {
-      method: 'POST',
-    });
-  } catch (error) {
-    console.error('Failed to track click:', error);
-  }
-}
 

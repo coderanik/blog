@@ -5,7 +5,6 @@ import Link from "next/link"
 import { MoreVertical } from "lucide-react"
 
 import { AnimatedNavbar } from "@/components/animated-navbar"
-import { trackClick } from "@/lib/backend-api"
 import type { BlogPost } from "@/lib/blog-posts"
 
 export function MyBlogClient({ initialPosts }: { initialPosts: BlogPost[] }) {
@@ -40,7 +39,6 @@ export function MyBlogClient({ initialPosts }: { initialPosts: BlogPost[] }) {
               key={post.slug}
               href={`/blog/${post.slug}`}
               className="block group"
-              onClick={() => trackClick(post.slug)}
             >
               <article className="border border-black bg-gray-50 hover:shadow-lg transition-shadow h-full flex flex-col">
                 {/* Post Image (if available) */}

@@ -1,0 +1,143 @@
+---
+title: "Which is Faster? #include vs import"
+description: "A deep dive into how C, Python, and Java handle external code — and why 'faster' depends on what you're measuring."
+date: "2026-02-20"
+tags:
+  - Programming
+  - C
+  - Python
+  - Java
+  - Performance
+  - Compilers
+image: "/content/faster.png"
+featured: true
+featuredPost: true
+featuredOrder: 1
+---
+
+<Callout type="tip" title="The Question That Started It All">
+  "Which one is faster #include in C or import in Python and Java?"
+</Callout>
+
+So a few days ago, my maths faculty casually asked me this question in class:
+
+**"Which one is faster #include in C or import in Python and Java?"**
+
+I did not have an immediate answer then.
+
+And honestly, I had never really thought about it that way.
+
+I use all of them regularly. I know how to write them. But I'd never stopped to ask what they're actually doing behind the scenes, or how that affects performance.
+
+So, like any developer today, I did what we all do.
+
+I  ***GOOGLE***-ed  it.
+
+And here's what I found.
+
+---
+
+## **Before We Compare: What Does "Faster" Actually Mean?**
+
+But before comparing anything, we need to clear up one thing.
+
+"Faster" can mean two very different things:
+
+**1. Compile / import time** — how quickly the program is prepared to run
+
+**2. Execution time** — how fast the program runs after it starts
+
+Most of the time, when people ask "which is faster?", they're really talking about execution speed, not how long it takes to compile or import.
+
+So that's the angle we'll focus on.
+
+---
+
+## **How #include Works in C**
+
+In C, `#include` is handled by the preprocessor, even before compilation begins.
+
+What actually happens is straightforward:
+
+- The contents of the header file are literally copied into your source file
+- The compiler then converts everything into native machine code
+- By the time the program runs, `#include` has already done its job
+
+There is **no runtime overhead** related to `#include`.
+
+<Callout type="info" title="Performance Impact: C">
+  - **Compilation**: Can be slower
+  - **Execution**: Extremely fast
+  - **Code runs**: Directly on hardware
+</Callout>
+
+This is why C programs are known for their speed.
+
+---
+
+## **How import Works in Python**
+
+Python takes a completely different approach.
+
+In Python, imports happen at **runtime**:
+
+- The module is loaded when the program starts running
+- Python is dynamically typed
+- Imported modules are cached after the first import
+
+This design makes Python flexible and easy to work with, but it comes at a cost.
+
+<Callout type="info" title="Performance Impact: Python">
+  - **Development speed**: Very fast to write and experiment with code
+  - **Execution speed**: Slower compared to C and Java
+  - **Runtime overhead**: Imports add startup time
+</Callout>
+
+Python clearly prioritizes simplicity and developer productivity over raw performance.
+
+---
+
+## **How import Works in Java**
+
+Java sits somewhere between C and Python.
+
+In Java:
+
+- No code is copied into your source file
+- Imports mainly help the compiler locate classes
+- Code runs inside the Java Virtual Machine (JVM)
+- The JVM uses Just-In-Time (JIT) compilation to optimize performance
+
+<Callout type="info" title="Performance Impact: Java">
+  - **Startup**: Slight overhead
+  - **Long-running programs**: Benefit from runtime optimizations
+  - **Speed**: Faster than Python, slightly slower than C
+</Callout>
+
+Java strikes a balance between performance, safety, and portability.
+
+---
+
+## **Speed Comparison Summary**
+
+| Language | Execution Speed | Development & Startup Speed |
+|----------|----------------|----------------------------|
+| **C** | Fastest (native machine code) | Slower compile times |
+| **Java** | Fast (JVM with JIT optimization) | Medium |
+| **Python** | Slowest (interpreted / VM-based) | Fastest to write and run |
+
+---
+
+## **Final Verdict**
+
+So, what's the answer to that original question?
+
+ **C is the fastest at runtime** because it compiles directly to machine code
+ **Java is slightly slower**, but JIT compilation makes it very efficient for large applications
+ **Python is the slowest in execution**, but excels in productivity and ease of use
+
+---
+
+*Have thoughts on this? Did I miss something? I'm still learning — reach out and tell me about your experience with these languages.*
+
+**Happy coding!** 🚀
