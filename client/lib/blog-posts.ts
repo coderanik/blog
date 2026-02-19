@@ -1,50 +1,34 @@
-import { getAllPosts as fetchAllPosts, getPostBySlug as fetchPostBySlug, trackView, trackClick } from './api'
-
-export interface BlogPost {
-  _id: string
-  slug: string
-  title: string
-  description: string
-  date: string
-  readTime: string
-  tags: string[]
-  content?: string
-  image?: string
-  status?: 'published' | 'draft'
-  featuredPost?: boolean
-}
+import type { BlogPost } from "@/lib/post-types"
+export type { BlogPost } from "@/lib/post-types"
 
 let cachedPosts: BlogPost[] | null = null
 
 export async function getAllPosts(): Promise<BlogPost[]> {
   try {
     if (cachedPosts) return cachedPosts
-    const posts = await fetchAllPosts()
+    const response = await fetch("/api/posts")
+    if (!response.ok) throw new Error("Failed to fetch posts")
+    const posts = (await response.json()) as BlogPost[]
     cachedPosts = posts
-    return posts
+    return cachedPosts
   } catch (error) {
     console.error('Failed to fetch posts:', error)
     return []
   }
 }
 
-export async function getPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  try {
-    const post = await fetchPostBySlug(slug)
-    // Track view when post is opened
-    trackView(slug)
-    return post
-  } catch (error) {
-    console.error('Failed to fetch post:', error)
-    return undefined
-  }
+export async function getFeaturedPosts(limit = 1): Promise<BlogPost[]> {
+  const posts = await getAllPosts()
+  const featured = posts
+    .filter((p) => p.featuredPost)
+    .sort(
+      (a, b) =>
+        (a.featuredOrder ?? 9999) - (b.featuredOrder ?? 9999) ||
+        new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )
+  return featured.slice(0, limit)
 }
 
-export function getFeaturedPosts(): BlogPost[] {
-  // For now, return first 3 posts as featured
-  // You can add a featured field to the blog model later
-  return []
+export async function trackClick(_slug: string): Promise<void> {
+  // No-op (no backend analytics).
 }
-
-// Re-export tracking functions
-export { trackClick } from './api'

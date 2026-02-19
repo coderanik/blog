@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Calendar, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { trackClick } from "@/lib/api"
+import { trackClick } from "@/lib/blog-posts"
 import type { BlogPost } from "@/lib/blog-posts"
 
 interface BlogCardProps {

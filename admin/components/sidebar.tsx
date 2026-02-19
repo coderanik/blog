@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, FileText, Mail, LogOut, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { isAuthenticated, removeAuthToken } from '@/lib/auth'
 
@@ -25,6 +25,7 @@ export function Sidebar() {
 
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dashboard/contact', label: 'Contact', icon: Mail },
     { href: '/drafts', label: 'Drafts', icon: FileText },
   ]
 

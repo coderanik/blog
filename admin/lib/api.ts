@@ -37,13 +37,92 @@ export interface AnalyticsSummary {
   topBlogsByViews: Array<{ _id: string; views: number }>;
   topBlogsByClicks: Array<{ _id: string; clicks: number }>;
   blogAnalytics: Array<{
-    _id: { blogId: string; blogSlug: string };
+    _id: { blogId: string | null; blogSlug: string };
     views: number;
     clicks: number;
   }>;
 }
 
-// Blog APIs
+export interface PostMeta {
+  _id: string;
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  readTime: string;
+  tags: string[];
+  image?: string;
+  featuredPost?: boolean;
+  featuredOrder?: number;
+}
+
+export interface EngagementItem {
+  slug: string;
+  likes: number;
+  comments: Array<{ id: string; content: string; author: string; date: string }>;
+  updatedAt: string;
+}
+
+export interface BlogAnalyticsDetail {
+  blogSlug: string;
+  views: number;
+  clicks: number;
+  viewsByTimezone: Array<{ _id: string; count: number }>;
+  clicksByTimezone: Array<{ _id: string; count: number }>;
+  viewsOverTime: Array<{ _id: string; count: number }>;
+}
+
+export interface ContactSubmission {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  createdAt: string;
+}
+
+const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL || 'http://localhost:3000';
+
+// Posts from client (MDX) — no auth
+export async function getPostsFromClient(): Promise<PostMeta[]> {
+  const response = await fetch(`${CLIENT_URL}/api/posts`);
+  if (!response.ok) return [];
+  return response.json();
+}
+
+// Engagement (backend, auth)
+export async function getEngagementList(): Promise<EngagementItem[]> {
+  const response = await fetch(`${API_URL}/engagement/list/all`, {
+    headers: getAuthHeadersWithJson(),
+  });
+  if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isAuthenticated');
+      if (window.location.pathname !== '/login') window.location.href = '/login';
+    }
+    return [];
+  }
+  return response.json();
+}
+
+// Contact submissions (backend, auth)
+export async function getContactSubmissions(): Promise<ContactSubmission[]> {
+  const response = await fetch(`${API_URL}/contact/submissions`, {
+    headers: getAuthHeadersWithJson(),
+  });
+  if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isAuthenticated');
+      if (window.location.pathname !== '/login') window.location.href = '/login';
+    }
+    throw new Error('Failed to fetch contact submissions');
+  }
+  return response.json();
+}
+
+// Blog APIs (legacy — not used when posts are MDX)
 export async function getAllBlogs(): Promise<Blog[]> {
   const response = await fetch(`${API_URL}/blogs`, {
     headers: getAuthHeadersWithJson(),
@@ -212,7 +291,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   return response.json();
 }
 
-export async function getBlogAnalytics(slug: string) {
+export async function getBlogAnalytics(slug: string): Promise<BlogAnalyticsDetail> {
   const response = await fetch(`${API_URL}/analytics/blog/${slug}`);
   if (!response.ok) throw new Error('Failed to fetch blog analytics');
   return response.json();

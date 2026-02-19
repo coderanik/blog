@@ -2,11 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import blogRoutes from './routes/blog.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import authRoutes from './routes/auth.routes';
-import uploadRoutes from './routes/upload.routes';
 import contactRoutes from './routes/contact.routes';
+import engagementRoutes from './routes/engagement.routes';
 
 dotenv.config();
 
@@ -81,10 +80,9 @@ mongoose
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/blogs', blogRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/upload', uploadRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/engagement', engagementRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

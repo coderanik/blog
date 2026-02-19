@@ -25,6 +25,28 @@ The blog covers topics including:
 - Real-world problem solving and case studies
 - Performance optimization and reliability engineering
 
+## Writing Posts (Markdown/MDX)
+
+Add new posts as `.mdx` (or `.md`) files inside:
+
+- `client/content/posts/`
+
+Each post uses frontmatter for metadata. Example:
+
+```md
+---
+title: "My Post Title"
+description: "Short summary shown on cards and search."
+date: "2026-01-28"
+tags: ["AI", "System Design"]
+image: "/some-image.jpg" # optional (can also be an absolute URL)
+featured: true           # optional
+featuredOrder: 1         # optional (lower = higher priority)
+---
+```
+
+To change the **featured post(s)** on the homepage, edit the frontmatter and toggle `featured` / `featuredOrder`.
+
 ## License
 
 **This project is proprietary and not open source.**

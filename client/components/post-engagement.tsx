@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { Heart, MessageSquare, Send } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { BACKEND_API_URL } from "@/lib/backend-api"
 
 interface Comment {
   id: string
@@ -25,10 +26,10 @@ export function PostEngagement({ slug }: { slug: string }) {
   useEffect(() => {
     async function fetchEngagement() {
       try {
-        const res = await fetch(`/api/engagement/${slug}`)
+        const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}`)
         const data = await res.json()
-        setLikes(data.likes || 0)
-        setComments(data.comments || [])
+        setLikes(data.likes ?? 0)
+        setComments(Array.isArray(data.comments) ? data.comments : [])
       } catch (error) {
         console.error("Failed to fetch engagement:", error)
         setLikes(0)
@@ -45,11 +46,13 @@ export function PostEngagement({ slug }: { slug: string }) {
     setIsLiked(true)
     setLikes((prev) => prev + 1)
     try {
-      await fetch(`/api/engagement/${slug}`, {
+      const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}/like`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "like" }),
+        body: JSON.stringify({}),
       })
+      const data = await res.json()
+      if (typeof data.likes === "number") setLikes(data.likes)
     } catch (error) {
       console.error("Failed to like:", error)
       setLikes((prev) => prev - 1)
@@ -63,13 +66,13 @@ export function PostEngagement({ slug }: { slug: string }) {
 
     setIsSubmitting(true)
     try {
-      const res = await fetch(`/api/engagement/${slug}`, {
+      const res = await fetch(`${BACKEND_API_URL}/engagement/${slug}/comment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "comment", content: newComment }),
+        body: JSON.stringify({ content: newComment }),
       })
       const data = await res.json()
-      if (data.comments) {
+      if (Array.isArray(data.comments)) {
         setComments(data.comments)
         setNewComment("")
       }
