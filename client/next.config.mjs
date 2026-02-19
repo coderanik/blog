@@ -3,6 +3,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/blog/faster",
+        destination: "/blog/which-is-faster-include-vs-import",
+        permanent: true,
+      },
+    ]
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
