@@ -59,6 +59,11 @@ export function HomeClient({ initialPosts }: { initialPosts: BlogPost[] }) {
           new Date(b.date).getTime() - new Date(a.date).getTime(),
       )[0] || (allPosts.length > 0 ? allPosts[0] : null)
 
+  // Filter out the featured post from the regular posts list
+  const regularPosts = featuredPost
+    ? allPosts.filter((p) => p.slug !== featuredPost.slug)
+    : allPosts
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -161,7 +166,7 @@ export function HomeClient({ initialPosts }: { initialPosts: BlogPost[] }) {
             </div>
 
             <div className="space-y-8 md:space-y-12">
-              {allPosts.slice(0, 3).map((post) => {
+              {regularPosts.slice(0, 3).map((post) => {
                 const stats = engagementStats[post.slug] || { views: 0, comments: 0, likes: 0 }
                 return (
                   <Link
