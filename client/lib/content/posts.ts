@@ -8,7 +8,7 @@ import { compileMDX } from "next-mdx-remote/rsc"
 import remarkGfm from "remark-gfm"
 import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings from "rehype-autolink-headings"
-import rehypeWrap from "rehype-wrap"
+import { rehypeTableWrapper } from "@/lib/rehype-table-wrapper"
 
 import { calculateReadingTime } from "@/lib/reading-time"
 import Callout from "@/components/Callout"
@@ -279,13 +279,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
             rehypeAutolinkHeadings,
             { behavior: "wrap" },
           ],
-          [
-            rehypeWrap,
-            {
-              selector: "table",
-              wrapper: "div.table-scroll-wrapper",
-            },
-          ],
+          rehypeTableWrapper,
         ],
       },
     },
