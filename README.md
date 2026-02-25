@@ -45,8 +45,6 @@ featuredOrder: 1         # optional (lower = higher priority)
 ---
 ```
 
-To change the **featured post(s)** on the homepage, edit the frontmatter and toggle `featured` / `featuredOrder`.
-
 ## License
 
 **This project is proprietary and not open source.**
